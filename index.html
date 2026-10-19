@@ -1,0 +1,1792 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vincent Vimont</title>
+<link rel="icon" href="favicon.png" type="image/png" sizes="150x150">
+<link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="description" content="Vincent Vimont, motion designer et GenAI freelance basé à Bordeaux. Agences, marques et artistes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @property --p { syntax: "<percentage>"; inherits: false; initial-value: 0%; }
+  @property --r { syntax: "<percentage>"; inherits: false; initial-value: 0%; }
+
+  :root {
+    --bg: #0c0c0d;
+    --paper: #ffffff;
+    --ink: #0a0a0a;
+    --muted-ink: #8a8a8a;
+    --line: rgba(10,10,10,.12);
+    --ease-out: cubic-bezier(.16,1,.3,1);
+    --ease-io: cubic-bezier(.76,0,.24,1);
+    --gutter: clamp(16px, 2.2vw, 32px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: var(--bg);
+    color: #fff;
+    font-family: "Inter Tight", system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; }
+  @media (pointer: fine) { body, a, button { cursor: none; } }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- Lumières d'ambiance (balayage par le bas) ---------- */
+  .light {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    --p: 0%;
+    -webkit-mask-image: linear-gradient(to top, #000 calc(var(--p) - 35%), transparent var(--p));
+            mask-image: linear-gradient(to top, #000 calc(var(--p) - 35%), transparent var(--p));
+    transition: --p 3.4s cubic-bezier(.5,0,.15,1);
+  }
+  .light.amber {
+    background: linear-gradient(180deg,
+      #e9b26b 0%, #dc9d5e 12%, #c47f4a 24%, #a7623a 35%, #87482b 45%,
+      #5e3220 55%, #3a2219 64%, #211916 73%, #151416 82%, #121214 100%);
+  }
+  .light.lav {
+    background: linear-gradient(180deg,
+      #d7c8f2 0%, #c2aeea 12%, #a68fdb 24%, #8a72c8 35%, #6d57ad 45%,
+      #4f3e88 55%, #352a5f 64%, #221b3a 73%, #161321 82%, #121116 100%);
+    transition-duration: 1.9s;
+  }
+  .lit .light.amber { --p: 135%; }
+  .lab-mode .light.lav { --p: 135%; }
+  .grain {
+    position: fixed; inset: 0; z-index: 30; pointer-events: none; opacity: .07;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    mix-blend-mode: overlay;
+  }
+
+  /* ---------- UI corners ---------- */
+  .ui {
+    position: fixed; z-index: 40;
+    padding: var(--gutter);
+    display: flex; flex-direction: column; gap: 2px;
+    color: #fff;
+    mix-blend-mode: difference;
+  }
+  .tl { top: 0; left: 0; }
+  .tc { top: 0; left: 50%; transform: translateX(-50%); flex-direction: row; gap: 22px; }
+  .tr { top: 0; right: 0; flex-direction: row; align-items: center; gap: 20px; }
+  .bl { bottom: 0; left: 0; }
+  .br { bottom: 0; right: 0; }
+  .name { font-weight: 500; }
+  .ui .muted { opacity: .62; }
+
+  /* navigation Work / Lab */
+  .tab { position: relative; display: inline-flex; align-items: center; gap: 8px; opacity: .55; transition: opacity .4s; }
+  .tab::before {
+    content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+    transform: scale(0); transition: transform .5s var(--ease-out);
+  }
+  .tab.active { opacity: 1; }
+  .tab.active::before { transform: scale(1); }
+  .tab:hover { opacity: 1; }
+
+  /* apparition des textes */
+  .reveal { display: block; overflow: hidden; }
+  .reveal > span { display: inline-block; transform: translateY(110%); transition: transform 1.1s var(--ease-out); }
+  .ui-in .reveal > span { transform: none; }
+  .ui-in .d1 > span { transition-delay: .1s; }
+  .ui-in .d2 > span { transition-delay: .2s; }
+  .ui-in .d3 > span { transition-delay: .3s; }
+  .ui-in .d4 > span { transition-delay: .4s; }
+
+  /* text roll hover */
+  .roll { position: relative; display: inline-block; overflow: hidden; vertical-align: top; }
+  .roll .t { display: block; transition: transform .55s var(--ease-out); }
+  .roll .t::after { content: attr(data-text); position: absolute; left: 0; top: 100%; }
+  a:hover .roll .t, a:focus-visible .roll .t,
+  button:hover .roll .t, button:focus-visible .roll .t { transform: translateY(-100%); }
+
+  .clock { font-variant-numeric: tabular-nums; }
+  .clock .colon { animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: .2; } }
+
+  .cta { display: inline-flex; align-items: center; gap: 10px; font-weight: 500; }
+  .arrow { display: inline-block; width: 1.1em; height: 1.1em; overflow: hidden; position: relative; }
+  .arrow svg { position: absolute; inset: 0; width: 100%; height: 100%; transition: transform .6s var(--ease-out); }
+  .arrow svg + svg { transform: translateX(-120%); }
+  .cta:hover .arrow svg:first-child { transform: translateX(120%); }
+  .cta:hover .arrow svg + svg { transform: none; }
+
+  /* son */
+  .sound { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; padding: 0 2px; }
+  .sound i {
+    display: block; width: 2px; height: 100%; background: currentColor;
+    transform-origin: 50% 100%;
+    animation: eq 1.1s ease-in-out infinite alternate;
+    transition: transform .4s var(--ease-out);
+  }
+  .sound i:nth-child(2) { animation-duration: .8s; animation-delay: -.3s; }
+  .sound i:nth-child(3) { animation-duration: 1.3s; animation-delay: -.6s; }
+  .sound i:nth-child(4) { animation-duration: .95s; animation-delay: -.2s; }
+  .sound.off i { animation: none; transform: scaleY(.18); }
+  @keyframes eq { 0% { transform: scaleY(.25); } 100% { transform: scaleY(1); } }
+
+  /* ---------- Stage (WebGL) ---------- */
+  #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; z-index: 2; }
+  .mark-src { display: none; }
+  .no-gl .mark-src { display: block; position: fixed; left: 50%; top: 50%; width: 60vw; transform: translate(-50%, -50%); z-index: 2; }
+  .no-gl .mark-src path { fill: #f4f1ec; }
+
+  /* ---------- About ---------- */
+  .about {
+    position: fixed; inset: 0; z-index: 12;
+    display: grid; place-items: center;
+    padding: 110px var(--gutter) 96px;
+    overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y;
+    visibility: hidden; pointer-events: none;
+    color: #f4f1ec;
+  }
+  .about.on { visibility: visible; pointer-events: auto; }
+  .about-inner {
+    width: min(1180px, 100%);
+    display: grid; grid-template-columns: 1.6fr 1fr; gap: clamp(40px, 8vw, 140px); align-items: start;
+  }
+  /* titres de section : petits, en majuscules ; tout le reste du texte à la même taille */
+  .about { --ab-size: clamp(20px, 1.85vw, 26px); }
+  .about-title, .about-side h3 {
+    font-size: 16px; font-weight: 500; line-height: 1.2; text-transform: uppercase; letter-spacing: .06em;
+    opacity: .65;
+    padding-bottom: 14px; margin-bottom: 22px; border-bottom: 1px solid rgba(244,241,236,.18);
+  }
+  .about.show .ab.about-title, .about.show .about-side h3.ab { opacity: .65; }
+  .about-lead, .about-sub, .about-skills, .about-quote, .clients {
+    font-size: var(--ab-size); line-height: 1.3; letter-spacing: -0.015em;
+  }
+  .about-lead { max-width: 28ch; }
+  .about-sub { margin-top: 36px; opacity: .6; }
+  .about-skills { list-style: none; margin-top: 10px; display: grid; gap: 4px; }
+  .about-skills .arr { display: inline-block; width: 1.5em; opacity: .55; }
+  .about-quote { margin-top: 40px; max-width: 34ch; }
+  .clients { list-style: none; font-size: 16px; line-height: 1.7; letter-spacing: 0; }
+  .clients li { transition: transform .5s var(--ease-out), opacity .4s; }
+  .clients:hover li { opacity: .45; }
+  .clients li:hover { opacity: 1; transform: translateX(8px); }
+  /* apparition : chaque bloc monte en fondu, dans l'ordre ; sortie : fondu rapide */
+  .about .ab {
+    opacity: 0; transform: translateY(28px);
+    transition: opacity .9s ease calc(var(--i) * 65ms), transform 1.1s var(--ease-out) calc(var(--i) * 65ms);
+  }
+  .about.show .ab { opacity: 1; transform: none; }
+  .about.leaving .ab {
+    opacity: 0; transform: translateY(-14px);
+    transition: opacity .45s ease calc(var(--e) * 1ms), transform .6s ease calc(var(--e) * 1ms);
+  }
+  .about.show .clients:hover li { opacity: .45; }
+  .about.show .clients li:hover { opacity: 1; }
+  @media (max-width: 760px) {
+    .about { place-items: start center; padding: 84px 20px 96px; }
+    .about-inner { grid-template-columns: 1fr; gap: 48px; }
+  }
+
+  /* ---------- Lab ---------- */
+  .lab {
+    position: fixed; inset: 0; z-index: 10;
+    overflow: hidden; pointer-events: none;
+    visibility: hidden;
+    /* fondu sur les 4 bords */
+    -webkit-mask-image:
+      linear-gradient(to bottom, transparent 0, #000 18%, #000 82%, transparent 100%),
+      linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent 100%);
+    -webkit-mask-composite: source-in;
+            mask-image:
+      linear-gradient(to bottom, transparent 0, #000 18%, #000 82%, transparent 100%),
+      linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent 100%);
+            mask-composite: intersect;
+    --lgap: clamp(56px, 7vw, 130px);
+    --colw: clamp(130px, 12vw, 210px);
+    touch-action: none;
+  }
+  .lab.on { pointer-events: auto; visibility: visible; }
+  .lab.leaving { visibility: visible; pointer-events: none; }
+  .lab.dragging .lab-fig { pointer-events: none; }
+  .lab, .lab * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .lab img { -webkit-user-drag: none; }
+  /* toute la grille s'enfonce légèrement pendant le glisser */
+  .lab-press { position: absolute; inset: 0; will-change: transform; }
+  /* rangée de colonnes plus large que l'écran, déplacée en 2D et rebouclée */
+  .lab-cols { position: absolute; left: 0; top: 0; height: 100%; display: flex; gap: var(--lgap); will-change: transform; }
+  .lab-col { flex: none; width: var(--colw); will-change: transform; }
+  .lab-set { display: flex; flex-direction: column; gap: var(--lgap); padding-bottom: var(--lgap); }
+  .lab-fig {
+    position: relative;
+    opacity: 0; transform: translateY(26px) scale(.94);
+    transition: opacity .9s ease calc(var(--d) * 1ms), transform 1.2s var(--ease-out) calc(var(--d) * 1ms);
+  }
+  .lab.show .lab-fig { opacity: 1; transform: none; }
+  /* sortie : fondu dans un ordre aléatoire */
+  .lab.leaving .lab-fig {
+    opacity: 0; transform: scale(.97);
+    transition: opacity .5s ease calc(var(--e) * 1ms), transform .6s ease calc(var(--e) * 1ms);
+  }
+  /* la carte intérieure est soulevée / enfoncée en JS selon la distance au curseur */
+  .lab-card { position: relative; overflow: hidden; border-radius: 4px; background: rgba(255,255,255,.06); will-change: transform; }
+  .lab-fig img, .lab-fig video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .lab-fig.lifted { visibility: hidden; }
+
+  /* image agrandie */
+  .zoom { position: fixed; inset: 0; z-index: 60; visibility: hidden; }
+  .zoom.on { visibility: visible; }
+  .zoom-veil {
+    position: absolute; inset: 0;
+    background: rgba(22,18,36,.55);
+    opacity: 0; transition: opacity .7s var(--ease-out);
+  }
+  .zoom.open .zoom-veil { opacity: 1; }
+  .zoom-img {
+    position: fixed; left: 0; top: 0; margin: 0;
+    object-fit: cover; border-radius: 4px;
+    transform-origin: 0 0;
+
+    will-change: transform;
+  }
+  .zoom-close {
+    position: fixed; z-index: 61;
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #fff; color: var(--ink);
+    display: grid; place-items: center;
+    opacity: 0; transform: scale(.6);
+    transition: opacity .4s, transform .6s var(--ease-out);
+  }
+  /* la croix n'apparaît qu'une fois l'image arrivée au centre */
+  .zoom.ready .zoom-close { opacity: 1; transform: none; }
+  .video-sound.zoom-sound { position: fixed; bottom: auto; z-index: 61; opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity .4s, transform .6s var(--ease-out), background-color .3s; }
+  .zoom.ready.has-audio .video-sound.zoom-sound { opacity: 1; transform: none; pointer-events: auto; }
+  .zoom-close i { width: 14px; height: 14px; position: relative; transition: transform .6s var(--ease-out); }
+  .zoom-close i::before, .zoom-close i::after { content: ""; position: absolute; left: 50%; top: 50%; width: 15px; height: 1.3px; background: currentColor; }
+  .zoom-close i::before { transform: translate(-50%,-50%) rotate(45deg); }
+  .zoom-close i::after  { transform: translate(-50%,-50%) rotate(-45deg); }
+  .zoom-close:hover i { transform: rotate(90deg); }
+
+  /* ---------- Cursor ---------- */
+  .cursor {
+    position: fixed; left: 0; top: 0; z-index: 9000;
+    pointer-events: none;
+    display: none;
+    mix-blend-mode: difference;
+  }
+  @media (pointer: fine) { .cursor { display: block; } }
+  .cursor .blob {
+    position: absolute; left: 0; top: 0;
+    width: 12px; height: 12px; margin: -6px 0 0 -6px;
+    border-radius: 50%; background: #fff;
+    border: 1px solid #fff;
+    transition: width .5s var(--ease-out), height .5s var(--ease-out), margin .5s var(--ease-out), background-color .3s, border-color .3s;
+    will-change: transform;
+  }
+  .cursor .txt {
+    position: absolute; left: 0; top: 0;
+    transform: translate(-50%, -50%) scale(.6);
+    color: var(--ink); font-size: 12px; font-weight: 500; letter-spacing: 0;
+    opacity: 0; transition: opacity .3s, transform .5s var(--ease-out);
+  }
+  .cursor.link .blob { width: 38px; height: 38px; margin: -19px 0 0 -19px; background-color: transparent; }
+  .cursor.press .blob { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; background-color: #fff; }
+  .cursor.view { mix-blend-mode: normal; }
+  .cursor.view .blob { width: 78px; height: 78px; margin: -39px 0 0 -39px; background: var(--paper); border-color: var(--paper); }
+  .cursor.view .txt { opacity: 1; transform: translate(-50%, -50%); }
+
+  .label {
+    position: fixed; left: 0; top: 0; z-index: 8999;
+    pointer-events: none;
+    padding: 10px 12px;
+    background: var(--paper); color: var(--ink);
+    display: flex; flex-direction: column; gap: 2px;
+    white-space: nowrap;
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path .6s var(--ease-out);
+  }
+  .label.on { clip-path: inset(0 0 0 0); }
+  .label .lt { font-weight: 500; }
+  .label .ly { color: var(--muted-ink); }
+  .label .ly:empty { display: none; }
+
+  /* ---------- Apparition "gradient wipe" des images (DOM) ---------- */
+  .wipe { position: absolute; inset: 0; }
+  .wipe > img, .wipe > video {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block;
+    --r: 0%;
+    -webkit-mask-image: radial-gradient(var(--r) var(--r) at var(--ox, 50%) var(--oy, 50%), #000 55%, transparent 100%);
+            mask-image: radial-gradient(var(--r) var(--r) at var(--ox, 50%) var(--oy, 50%), #000 55%, transparent 100%);
+  }
+
+  .wipe > img, .wipe > video { transition: --r 1.85s cubic-bezier(.55,0,.2,1); }
+  .wipe.go > img, .wipe.go > video { --r: 290%; }
+  .wipe.done > img, .wipe.done > video { -webkit-mask-image: none; mask-image: none; }
+  /* vidéo principale : affichée en entier, quel que soit son format */
+  .sheet-media { background: #0c0c0d; }
+  .wipe.is-video > video { object-fit: contain; }
+  .video-sound {
+    position: absolute; left: 14px; bottom: 14px; z-index: 3;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px 8px 10px; border-radius: 999px;
+    background: rgba(255,255,255,.9); color: var(--ink); font-size: 13px;
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    transition: background-color .3s;
+  }
+  .video-sound:hover { background: #fff; }
+  .video-sound .sound { height: 11px; }
+  .video-sound:not(.on) .sound i { animation: none; transform: scaleY(.18); }
+  .no-gallery .gallery, .no-more .scroll-hint { display: none; }
+  .shimmer { background: linear-gradient(100deg, #ececec 30%, #f6f6f6 50%, #ececec 70%) 0 0 / 300% 100%; animation: shimmer 1.6s linear infinite; }
+  @keyframes shimmer { to { background-position: -150% 0; } }
+
+  /* ---------- Sheet (card centrée) ---------- */
+  .backdrop {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(8,8,9,.5);
+    opacity: 0; pointer-events: none;
+    transition: opacity .7s var(--ease-out);
+  }
+  .sheet {
+    --side: clamp(12px, 7vw, 140px);
+    position: fixed; left: 50%; top: 50%; z-index: 51;
+    width: min(1180px, calc(100vw - 2 * var(--side)));
+    height: min(84vh, 900px);
+    background: var(--paper); color: var(--ink);
+    border-radius: 16px;
+    box-shadow: 0 40px 120px -20px rgba(0,0,0,.6);
+    transform: translate(-50%, calc(-50% + 100vh));
+    visibility: hidden;
+    transition: transform 1s var(--ease-io), visibility 0s linear 1s;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .sheet:focus { outline: none; }
+  .sheet-open .backdrop { opacity: 1; pointer-events: auto; }
+  .sheet-open .sheet { transform: translate(-50%, -50%); visibility: visible; transition: transform 1s var(--ease-io), visibility 0s; }
+  .sheet .muted { color: var(--muted-ink); }
+  .sheet-head {
+    display: flex; justify-content: space-between; align-items: center; gap: 16px;
+    padding: 14px 18px 14px 24px;
+    border-bottom: 1px solid var(--line);
+    flex: none;
+  }
+  .sheet-nav { display: flex; align-items: center; gap: 8px; }
+  .nav-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 1px solid var(--line);
+    display: grid; place-items: center;
+    transition: background-color .35s, border-color .35s, color .35s;
+  }
+  .nav-btn .arrow { width: 16px; height: 16px; }
+  .nav-btn:hover { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+  .nav-btn:hover .arrow svg:first-child { transform: translateX(120%); }
+  .nav-btn:hover .arrow svg + svg { transform: none; }
+  .nav-btn.prev .arrow { transform: scaleX(-1); }
+  .close { display: inline-flex; gap: 10px; align-items: center; padding: 0 10px 0 14px; height: 40px; }
+  .close i { display: inline-block; width: 12px; height: 12px; position: relative; transition: transform .6s var(--ease-out); }
+  .close i::before, .close i::after { content: ""; position: absolute; left: 50%; top: 50%; width: 14px; height: 1px; background: currentColor; }
+  .close i::before { transform: translate(-50%,-50%) rotate(45deg); }
+  .close i::after  { transform: translate(-50%,-50%) rotate(-45deg); }
+  .close:hover i { transform: rotate(90deg); }
+  .counter { font-variant-numeric: tabular-nums; }
+  .sheet-body {
+    flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    padding: 24px;
+    touch-action: pan-y;
+    scrollbar-width: thin;
+  }
+  .sheet-top {
+    --media-h: min(62vh, 620px);
+    display: grid; grid-template-columns: 1.55fr 1fr; gap: 32px; align-items: start;
+  }
+  .sheet-media { position: relative; height: var(--media-h); overflow: hidden; border-radius: 8px; }
+  .sheet-info { display: flex; flex-direction: column; gap: 22px; min-width: 0; min-height: var(--media-h); }
+  .sheet-info h2 { font-size: clamp(34px, 4vw, 60px); font-weight: 500; letter-spacing: -0.04em; line-height: .98; }
+  .subtitle { margin-top: -10px; font-size: 15px; }
+  .desc, .section-text { display: flex; flex-direction: column; gap: 14px; font-size: 16px; line-height: 1.55; }
+  .desc { max-width: 46ch; padding-top: 20px; border-top: 1px solid var(--line); }
+  .desc strong, .section-text strong { font-weight: 600; }
+  /* deuxième partie du texte, sous la vidéo */
+  .sheet-section {
+    display: grid; grid-template-columns: 1fr 1.55fr; gap: 32px;
+    margin: 56px 0 44px; padding-top: 24px; border-top: 1px solid var(--line);
+  }
+  .sheet-section h3 { font-size: clamp(22px, 2.2vw, 30px); font-weight: 500; letter-spacing: -0.02em; line-height: 1.1; }
+  .section-text { max-width: 64ch; }
+  .sheet-section[hidden] { display: none; }
+  .scroll-hint { margin-top: auto; display: inline-flex; gap: 8px; align-items: center; }
+  .scroll-hint .arrow { width: 14px; height: 14px; transform: rotate(90deg); }
+  .sheet .stagger { opacity: 0; transform: translateY(16px); transition: opacity .8s var(--ease-out), transform .8s var(--ease-out); }
+  .sheet-open .sheet .stagger { opacity: 1; transform: none; }
+  .sheet-open .sheet .stagger:nth-child(1) { transition-delay: .35s; }
+  .sheet-open .sheet .stagger:nth-child(2) { transition-delay: .45s; }
+  .sheet-open .sheet .stagger:nth-child(3) { transition-delay: .55s; }
+  .sheet-open .sheet .stagger:nth-child(4) { transition-delay: .65s; }
+
+  .gallery { display: grid; gap: 12px; margin-top: 12px; transition: opacity .4s ease; }
+  .gallery.swap { opacity: 0; }
+  .row { display: grid; gap: 12px; justify-content: center; }
+  .gallery figure { position: relative; overflow: hidden; border-radius: 8px; }
+
+  @media (max-width: 760px) {
+    .tr { gap: 14px; }
+    .tc { top: auto; bottom: 0; }
+    .sheet { height: 88vh; }
+    .sheet-head { padding: 10px 10px 10px 16px; }
+    .sheet-body { padding: 16px; }
+    .sheet-top { grid-template-columns: 1fr; gap: 20px; --media-h: 42vh; }
+    .sheet-info { min-height: 0; }
+    .sheet-section { grid-template-columns: 1fr; gap: 16px; margin: 36px 0 28px; }
+    .close .roll { display: none; }
+
+    .lab { --lgap: 28px; --colw: 120px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation: none !important; }
+  }
+</style>
+<script src="media/data.js"></script>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+
+<div class="light amber" aria-hidden="true"></div>
+<div class="light lav" aria-hidden="true"></div>
+
+<header class="ui tl">
+  <span class="reveal name"><span>Vincent Vimont</span></span>
+  <span class="reveal d1 muted"><span>Motion Designer, GenAI</span></span>
+</header>
+
+<nav class="ui tc" aria-label="Sections">
+  <span class="reveal d1"><span><button class="tab active" id="navWork" data-cursor="link"><span class="roll"><span class="t" data-text="Work">Work</span></span></button></span></span>
+  <span class="reveal d2"><span><button class="tab" id="navLab" data-cursor="link"><span class="roll"><span class="t" data-text="Lab">Lab</span></span></button></span></span>
+  <span class="reveal d3"><span><button class="tab" id="navAbout" data-cursor="link"><span class="roll"><span class="t" data-text="About">About</span></span></button></span></span>
+</nav>
+
+<nav class="ui tr" aria-label="Réseaux sociaux">
+  <span class="reveal"><span><button class="sound" id="sound" data-cursor="link" aria-label="Couper le son" aria-pressed="false"><i></i><i></i><i></i><i></i></button></span></span>
+  <a class="reveal d1" href="https://www.linkedin.com/in/vincentvmnt/" target="_blank" rel="noopener" data-cursor="link"><span><span class="roll"><span class="t" data-text="LinkedIn">LinkedIn</span></span></span></a>
+  <a class="reveal d2" href="https://www.instagram.com/vincentvmnt/" target="_blank" rel="noopener" data-cursor="link"><span><span class="roll"><span class="t" data-text="Instagram">Instagram</span></span></span></a>
+</nav>
+
+<div class="ui bl">
+  <span class="reveal d2 muted"><span>Bordeaux</span></span>
+  <span class="reveal d3"><span class="clock" id="clock">--:--</span></span>
+</div>
+
+<div class="ui br">
+  <a class="reveal d4" href="mailto:vincentvmnt@gmail.com" data-cursor="link">
+    <span>
+      <span class="cta">
+        <span class="arrow" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1 8h13M9 3l5 5-5 5"/></svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1 8h13M9 3l5 5-5 5"/></svg>
+        </span>
+        <span class="roll"><span class="t" data-text="Let's discuss">Let's discuss</span></span>
+      </span>
+    </span>
+  </a>
+</div>
+
+<canvas id="gl" aria-hidden="true"></canvas>
+<svg class="mark-src" viewBox="150 25 1140 718" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <path id="markPath" d="M1284.36,382.36h-417.42c-52.76,0-79.18-63.79-41.88-101.1l249.46-249.46c.64-.64.64-1.68,0-2.32h0c-.64-.64-1.68-.64-2.32,0l-248.49,248.49c-66.84,66.84-157.5,104.39-252.02,104.39H155.64c-.91,0-1.64.73-1.64,1.64h0c0,.91.73,1.64,1.64,1.64h417.42c52.76,0,79.18,63.79,41.88,101.1l-249.46,249.46c-.64.64-.64,1.68,0,2.32h0c.64.64,1.68.64,2.32,0l248.49-248.49c66.84-66.84,157.5-104.39,252.02-104.39h416.05c.91,0,1.64-.73,1.64-1.64h0c0-.91-.73-1.64-1.64-1.64Z"/>
+</svg>
+
+<section class="about" id="about" aria-label="About" aria-hidden="true">
+  <div class="about-inner">
+    <div class="about-main">
+      <h2 class="about-title ab">About</h2>
+      <p class="about-lead ab">I create visuals and motion design to make your brand impossible to ignore.</p>
+      <p class="about-sub ab">My difference lies in the combination of skills</p>
+      <ul class="about-skills">
+        <li class="ab"><span class="arr">→</span>Art Direction</li>
+        <li class="ab"><span class="arr">→</span>Motion Design</li>
+        <li class="ab"><span class="arr">→</span>GenAI &amp; Workflow (ComfyUI)</li>
+      </ul>
+      <p class="about-quote ab">I want to participate in the creation of culture,<br>not simply be a part of it.</p>
+    </div>
+    <aside class="about-side">
+      <h3 class="ab">Work with</h3>
+      <ul class="clients">
+        <li class="ab">OKCC Agency</li>
+        <li class="ab">Dafolle</li>
+        <li class="ab">BeTomorrow</li>
+        <li class="ab">Asobo Studio</li>
+        <li class="ab">TBWA Paris</li>
+        <li class="ab">FCINQ</li>
+        <li class="ab">Les Temps Modernes</li>
+        <li class="ab">Niji</li>
+        <li class="ab">Spaag</li>
+        <li class="ab">Mnstr agency</li>
+        <li class="ab">FaberNovel</li>
+      </ul>
+    </aside>
+  </div>
+</section>
+<section class="lab" id="lab" aria-label="Lab" aria-hidden="true"><div class="lab-press" id="labPress"><div class="lab-cols" id="labCols"></div></div></section>
+<div class="zoom" id="zoom" aria-hidden="true"><div class="zoom-veil" id="zoomVeil"></div><button class="zoom-close" id="zoomClose" data-cursor="link" aria-label="Fermer"><i></i></button><button class="video-sound zoom-sound" id="zoomSound" data-cursor="link"><span class="sound" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="t">Activer le son</span></button></div>
+<div class="grain" aria-hidden="true"></div>
+
+<nav class="sr-only" aria-label="Projets"><ul id="srList"></ul></nav>
+
+<div class="cursor" id="cursor"><div class="blob"></div><span class="txt">View</span></div>
+<div class="label" id="label"><span class="lt"></span><span class="ly"></span></div>
+
+<div class="backdrop" id="backdrop"></div>
+<section class="sheet" id="sheet" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" aria-hidden="true">
+  <div class="sheet-head">
+    <span class="muted counter" id="sheetIndex">01 / 07</span>
+    <div class="sheet-nav">
+      <button class="nav-btn prev" id="prev" data-cursor="link" aria-label="Projet précédent">
+        <span class="arrow" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1 8h13M9 3l5 5-5 5"/></svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1 8h13M9 3l5 5-5 5"/></svg>
+        </span>
+      </button>
+      <button class="nav-btn next" id="next" data-cursor="link" aria-label="Projet suivant">
+        <span class="arrow" aria-hidden="true">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1 8h13M9 3l5 5-5 5"/></svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1 8h13M9 3l5 5-5 5"/></svg>
+        </span>
+      </button>
+      <button class="close" id="close" data-cursor="link"><span class="roll"><span class="t" data-text="Close">Close</span></span><i></i></button>
+    </div>
+  </div>
+  <div class="sheet-body" id="sheetBody">
+    <div class="sheet-top">
+      <div class="sheet-media" id="sheetMedia">
+        <button class="video-sound" id="videoSound" data-cursor="link"><span class="sound" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="t">Activer le son</span></button>
+      </div>
+      <div class="sheet-info" id="sheetInfo">
+        <h2 class="stagger" id="sheetTitle"></h2>
+        <p class="subtitle muted stagger" id="sheetSub"></p>
+        <div class="desc stagger" id="sheetDesc"></div>
+        <span class="scroll-hint muted stagger">
+          <span class="arrow" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M1 8h13M9 3l5 5-5 5"/></svg></span>
+          Scroll pour voir plus
+        </span>
+      </div>
+    </div>
+    <section class="sheet-section" id="sheetSection">
+      <h3 id="sheetH2"></h3>
+      <div class="section-text" id="sheetText"></div>
+    </section>
+    <div class="gallery" id="gallery"></div>
+  </div>
+</section>
+
+<script type="module">
+import * as THREE from "three";
+
+/* ============ Projets ============
+   Textes de chaque fiche. Un champ vide n'est pas affiché.
+   title : titre · type : sous-titre (aussi affiché au survol) · text : premier texte, à côté de la vidéo
+   title2 / text2 : deuxième partie, sous la vidéo. Une ligne vide sépare deux paragraphes ;
+   une ligne qui commence par "Libellé :" affiche le libellé en gras.
+   Les visuels viennent de media/data.js, généré par tools/build-media.mjs à partir du dossier Assets. */
+const PROJECTS = [
+  { slug: "aesop", title: "Aesop", type: "Generative AI",
+    text: `Can AI handle specific effects and artistic direction, such as motion blur, camera movement, and artistic composition, while preserving product details, including label text?
+
+This work focused precisely on these questions. Here are the results and my opinion.`,
+    title2: "My opinion:",
+    text2: `Regarding image generation, Flux2 performed flawlessly, creating highly detailed visuals. Flux almost managed to generate perfect text on the label. Perhaps the FP8 version wasn't of sufficient quality, and my reference images weren't high enough resolution for Flux to recognize all the details.
+
+However, for generating creative effects like motion blur and artistic compositions, it's a success. Adherence to the prompt is excellent.
+
+For the video part, Wan2.2 wasn't able to create legible text on the labels, probably because my image didn't contain perfectly sharp text and I used the FP8 version of this AI model. On the other hand, WanMove and Wan2.2 I2V worked well for creating camera movements and physics.` },
+
+  { slug: "aex", title: "Aex", type: "Generative AI",
+    text: `AI is ideal for quickly visualizing ideas and refining them through iterations. One of my goals is to create my own clothing line. What could be simpler than using AI to generate the first version and define the brand's visual identity?`,
+    title2: "Creative process:",
+    text2: `Each project has almost the same structure, because it works for me.
+
+First, I gather my ideas by writing them down on Figma, then I curate images to create a moodboard and get the look and feel I imagined. Next I create a script and a storyboard, sometimes with sketches. Finally, I frame the Art Direction and begin the production.
+
+For the Aex project, I wanted to create minimalist, robust garments worn by humans with robotic parts, because this brand is set in a near future (and because I like sci-fi). After various iterations of garments, the creation of LoRAs for the models and a bunch of generations, I'm finally really happy with the result.` },
+
+  { slug: "angell", title: "Angell Bike App", type: "Product Design, Motion design",
+    text: `The partnership between the electric bike brand Angell Bike (Angell Mobility) and the Bordeaux-based digital innovation agency BeTomorrow focuses primarily on software development, connectivity, and the mobile application that powers the connected ecosystem of these smart bikes.
+
+For the tender process, I had the opportunity to create the initial draft of the bike’s mobile application, as well as a motion design piece to showcase the immersive experience.`,
+    title2: "", text2: "" },
+
+  { slug: "compoz", title: "Compoz, high-end fragrance diffuser", type: "Motion Design, 3D",
+    text: `Artiris, creator of a personalized fragrance diffuser, collaborated with BeTomorrow to develop the mobile application, allowing to control a personalized fragrance diffuser. It is a unique olfactory experience, allowing to create custom perfumes from natural essential oils. For this project, I made different motion designs and modeled the diffuser to promote the project externally.`,
+    title2: "Behind the scene & Stillframes",
+    text2: `Having a physical product to play with is always fun, the luxury sector allowed me to play with minimalistic light and shadow schemes. Less is more, and it makes perfect sense with this project. Before all this, I created the 3D model of the device from scratch and animated the user interface. I even designed the cartridges inside the diffuser to show the opening of the diffuser drawer. The devil is in the details.` },
+
+  { slug: "nft-pangee", title: "NFT Pangée / Pangea", type: "Branding, 3D, Motion Design, AI",
+    text: `As a multidisciplinary designer, I wanted to mix graphics, visual identity, 3D and AI to create this atypical project. I wanted to create the identity of an NGO that would support a return to intact nature by using NFT.
+
+To denounce the impact of man, I added a digital touch with holographic glitches on the cards that reflect the imprint of humanity, which destroys and modifies the landscape of our environment.`,
+    title2: "Behind the scene & Stillframes",
+    text2: `To start this project, I first needed to create the identity of the NGO. Flags are a powerful representation of group belonging, a strong symbol and a rallying sign for a meaningful cause. I chose to work with simple colors, shapes, and typography to keep the design clean and impactful. Each flag features a different name that highlights key elements of our planet, such as the sky, mountains, and deserts. The ocean is intentionally left out, as this fictional NGO focuses solely on terrestrial environments.
+
+Using Illustrator, AI, and Blender, I designed the core elements of the cards, including the flags design and overall identity. Then, in Photoshop, I added a holographic effect to introduce a digital touch. I merged all the assets and created the final card structure in Blender, incorporating the holographic material from the Photoshop exports. To complete the project, I wrote a storyboard with various graphic compositions and animated all the elements in After Effects.` },
+
+  { slug: "okcc-x-lv", title: "Louis Vuitton x OKCC Agency", type: "Motion Design, 3D, Generative AI",
+    text: `During 2025, Louis Vuitton asked OKCC Agency to develop a unique workflow using ComfyUI and various AI models to improve the visual creation process. With Stéphane Parsoire and the OKCC team, we conducted research to perfectly recreate LV products without losing any details and to place them in different situations, for example, adding a scarf to an existing model or placing a bag on sand. We tested many solutions, from creating a specific LoRA to using ControlNet and IP-Adapter. I created this short motion piece to briefly explain the collaboration.`,
+    title2: "", text2: "" },
+
+  { slug: "outresable", title: "Outresable “Sand”", type: "Generative AI",
+    text: `Imagine a world where sand divers descend kilometers below the surface...
+
+As a Sci-Fi lover, after reading Hugh Howey’s novel “Sand” (Outresable), I wanted to turn my imagination into video. I challenged myself to create a movie/series trailer by blending my skills with AI.`,
+    title2: "My creative process step-by-step:",
+    text2: `Concept & Storyboard: Scripting (writing + structure) with ChatGPT, personal adjustments, then creating a storyboard on Figma to set the mood and color palette using various references.
+
+Image Generation: Using Flux.1 dev, Krea, SRPO, and Z-image within ComfyUI to create a cohesive visual universe.
+
+Video Generation: Video generation with Wan2.2, followed by upscaling via Topaz and SeedVR2 for a high-quality finish.
+
+Post-Production: Editing in After Effects and Sound Design in Ableton Live. I used various sound elements, including music by Jóhann Jóhannsson created for the movie Arrival directed by Denis Villeneuve.
+
+Audio: Integration of a voiceover created on ElevenLabs.
+
+A stimulating project that brings together everything I’m passionate about: Sci-Fi, Sound Design, imagery, and the incredible potential of generative AI for video.` },
+
+  { slug: "tbm", title: "TBM, Transport Network App", type: "Motion Design, 3D",
+    text: `TBM, the main transport network company in Bordeaux, collaborated with BeTomorrow to redesign the application. The UX/UI aspect was a significant challenge, and Aymeric Delpeuch executed it brilliantly. Regarding identity and marketing, Léa Fournier reimagined the logo, colors, fonts, and overall spirit of the brand with a fresh perspective. Please check out these talented professionals, they’re definitely worth it. For this project, my role at BeTomorrow was to promote the work through motion design. It was really fun to play with the gradients, colors, and wavy shapes.`,
+    title2: "Behind the scene & Stillframes",
+    text2: `A lot of work was done during this long project at BeTomorrow, and it’s difficult to showcase it all in a short video. I decided to first present the brand rebranding by displaying the color palette, fonts, gradients, and logo. The next part of the video highlights the UX/UI aspect, represented by the bento grid, where you can see the app, user interface elements, logo, icons, and micro-animations. With all these elements in place, we then presented the communication and marketing created with the new identity and redesigned application. It was also important to cover the key functionalities (exploring mobility, itineraries, schedules, as well as buying and validating tickets). Below are some styleframes.` },
+];
+const MEDIA = window.PORTFOLIO_MEDIA || { projects: {}, lab: [] };
+PROJECTS.forEach(p => {
+  const m = MEDIA.projects[p.slug];
+  p.img = m.thumb.src;
+  const a = m.thumb.w / m.thumb.h;
+  p.format = a > 1.2 ? "landscape" : a < 0.85 ? "portrait" : "square";
+  p.video = m.video;
+  p.gallery = m.gallery;
+});
+
+// Lab : images et vidéos, ratio réel de chaque visuel
+const LAB = MEDIA.lab.map(it => ({ ...it, ratio: `${it.w} / ${it.h}` }));
+
+// nombre de fois où chaque projet apparaît sur l'anneau
+const RING_COPIES = 1;
+
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const finePointer = matchMedia("(pointer: fine)").matches;
+const lerp = (a, b, t) => a + (b - a) * t;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const smoothstep = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const easeOut = x => 1 - Math.pow(1 - x, 3);
+
+/* ============ Son (Web Audio, aucun fichier) ============ */
+const Sound = (() => {
+  let ctx, master, verb, muted = false, introPlayed = false, lastTick = 0;
+  try { muted = localStorage.getItem("vv-muted") === "1"; } catch (e) {}
+
+  function init() {
+    if (ctx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = muted ? 0 : 0.9;
+    master.connect(ctx.destination);
+    const len = ctx.sampleRate * 2.6, buf = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = buf.getChannelData(ch);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2);
+    }
+    verb = ctx.createConvolver(); verb.buffer = buf;
+    const wet = ctx.createGain(); wet.gain.value = 0.32;
+    verb.connect(wet).connect(master);
+  }
+  function tone(freq, at, dur, gain, { type = "sine", attack = 0.01, glide = 0, wet = true } = {}) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, at);
+    if (glide) o.frequency.exponentialRampToValueAtTime(freq * glide, at + dur);
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(gain, at + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    o.connect(g); g.connect(master); if (wet) g.connect(verb);
+    o.start(at); o.stop(at + dur + 0.05);
+  }
+  const ready = () => ctx && ctx.state === "running" && !muted;
+
+  return {
+    get muted() { return muted; },
+    unlock() {
+      init();
+      if (!ctx) return;
+      ctx.resume().then(() => { if (!introPlayed && performance.now() < 12000) this.intro(); });
+    },
+    // tente de jouer l'accord sans attendre de clic (le navigateur ne l'autorise que si le visiteur a déjà interagi avec le site)
+    tryAutostart() { init(); if (!ctx) return; ctx.resume().then(() => { if (ctx.state === "running") this.intro(); }).catch(() => {}); },
+    intro() {
+      if (introPlayed || !ready()) return;
+      introPlayed = true;
+      const t = ctx.currentTime + 0.05;
+      tone(87.31, t, 4.2, 0.05, { attack: 0.8 });
+      [349.23, 523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+        tone(f, t + i * 0.11, 3.4 - i * 0.2, 0.034, { attack: 0.06 });
+        tone(f * 1.003, t + i * 0.11 + 0.01, 2.6, 0.012, { type: "triangle", attack: 0.08 });
+      });
+      tone(1567.98, t + 0.62, 2.2, 0.01, { attack: 0.3 });
+    },
+    tick(pitch = 1) {
+      if (!ready()) return;
+      const now = performance.now();
+      if (now - lastTick < 45) return;
+      lastTick = now;
+      tone(2300 * pitch, ctx.currentTime, 0.045, 0.022, { attack: 0.002, glide: 0.7, wet: false });
+    },
+    click() { if (ready()) tone(820, ctx.currentTime, 0.09, 0.04, { type: "triangle", attack: 0.003, glide: 0.6 }); },
+    open() {
+      if (!ready()) return;
+      const t = ctx.currentTime;
+      tone(659.25, t, 0.6, 0.03); tone(987.77, t + 0.07, 0.8, 0.025);
+    },
+    close() {
+      if (!ready()) return;
+      const t = ctx.currentTime;
+      tone(987.77, t, 0.4, 0.022); tone(659.25, t + 0.06, 0.6, 0.025);
+    },
+    swell(up) {
+      // transition Work <-> Lab : glissement doux
+      if (!ready()) return;
+      const t = ctx.currentTime;
+      const notes = up ? [392, 587.33, 880] : [880, 587.33, 392];
+      notes.forEach((f, i) => tone(f, t + i * 0.09, 1.6, 0.02, { attack: 0.15 }));
+    },
+    toggle() {
+      muted = !muted;
+      try { localStorage.setItem("vv-muted", muted ? "1" : "0"); } catch (e) {}
+      init();
+      if (ctx) { ctx.resume(); master.gain.setTargetAtTime(muted ? 0 : 0.9, ctx.currentTime, 0.05); }
+      return muted;
+    },
+  };
+})();
+const soundBtn = document.getElementById("sound");
+function syncSoundBtn() {
+  soundBtn.classList.toggle("off", Sound.muted);
+  soundBtn.setAttribute("aria-pressed", String(Sound.muted));
+  soundBtn.setAttribute("aria-label", Sound.muted ? "Activer le son" : "Couper le son");
+}
+syncSoundBtn();
+soundBtn.addEventListener("click", () => { Sound.toggle(); syncSoundBtn(); Sound.click(); });
+["pointerdown", "keydown", "touchstart"].forEach(ev =>
+  addEventListener(ev, () => Sound.unlock(), { once: true, passive: true }));
+
+/* ============ Horloge Bordeaux ============ */
+const clockEl = document.getElementById("clock");
+const fmt = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit", hour12: false });
+function tickClock() {
+  const [h, m] = fmt.format(new Date()).split(":");
+  clockEl.innerHTML = `${h}<span class="colon">:</span>${m}`;
+}
+tickClock(); setInterval(tickClock, 1000);
+
+/* ============ Séquence d'intro ============ */
+// noir -> la lumière monte par le bas, la forme se remplit en même temps -> textes -> projets
+const START = performance.now();
+const T = { light: 250, shape: 500, ui: 2700, cards: 3000, cardStep: 110 };
+const body = document.body;
+setTimeout(() => body.classList.add("lit"), T.light);
+setTimeout(() => body.classList.add("ui-in"), T.ui);
+setTimeout(() => Sound.tryAutostart(), T.shape);   // en même temps que la forme apparaît
+
+const path = document.getElementById("markPath");
+const VB = { x: 150, y: 25, w: 1140, h: 718 };
+
+/* ============ WebGL ============ */
+const canvas = document.getElementById("gl");
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, premultipliedAlpha: true, powerPreference: "high-performance" });
+} catch (e) {
+  document.documentElement.classList.add("no-gl");
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+renderer.setClearColor(0x000000, 0);
+
+const scene = new THREE.Scene();
+const FOV = 24;   // focale longue : perspective présente mais pas déformante
+const camera = new THREE.PerspectiveCamera(FOV, 1, 10, 12000);
+
+const NOISE = /* glsl */`
+vec3 permute(vec3 x){ return mod(((x*34.0)+1.0)*x, 289.0); }
+float snoise(vec2 v){
+  const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+  vec2 i = floor(v + dot(v, C.yy));
+  vec2 x0 = v - i + dot(i, C.xx);
+  vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  vec4 x12 = x0.xyxy + C.xxzz; x12.xy -= i1;
+  i = mod(i, 289.0);
+  vec3 p = permute(permute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
+  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+  m = m*m; m = m*m;
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+  vec3 g; g.x = a0.x * x0.x + h.x * x0.y; g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}`;
+
+/* ---------- La forme : dégradé "aurora" ---------- */
+const maskCanvas = document.createElement("canvas");
+maskCanvas.width = 2048; maskCanvas.height = Math.round(2048 * VB.h / VB.w);
+{
+  const ctx = maskCanvas.getContext("2d");
+  const s = maskCanvas.width / VB.w;
+  ctx.setTransform(s, 0, 0, s, -VB.x * s, -VB.y * s);
+  ctx.fillStyle = "#fff";
+  ctx.fill(new Path2D(path.getAttribute("d")));
+}
+const maskTex = new THREE.CanvasTexture(maskCanvas);
+
+const shapeMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, depthTest: false, premultipliedAlpha: true,
+  uniforms: {
+    uMask: { value: maskTex },
+    uTime: { value: 0 },
+    uReveal: { value: 0 },
+    uVis: { value: 1 },
+    uAspect: { value: VB.w / VB.h },
+  },
+  vertexShader: /* glsl */`
+    varying vec2 vUv;
+    void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+  fragmentShader: /* glsl */`
+    uniform sampler2D uMask;
+    uniform float uTime, uReveal, uVis, uAspect;
+    varying vec2 vUv;
+    ${NOISE}
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+
+    // palette qui glisse dans le temps : magenta, orange, or, cyan, bleu, violet
+    // boucle de 8 teintes sans passer par le vert
+    vec3 stop(float i){
+      if (i < 0.5) return vec3(1.00, 0.25, 0.64);   // magenta
+      if (i < 1.5) return vec3(1.00, 0.52, 0.25);   // orange
+      if (i < 2.5) return vec3(1.00, 0.78, 0.38);   // or
+      if (i < 3.5) return vec3(1.00, 0.42, 0.48);   // corail
+      if (i < 4.5) return vec3(0.58, 0.28, 1.00);   // violet
+      if (i < 5.5) return vec3(0.24, 0.42, 1.00);   // bleu
+      if (i < 6.5) return vec3(0.25, 0.86, 0.95);   // cyan
+      return vec3(0.42, 0.30, 1.00);                // indigo
+    }
+    vec3 aurora(float x){
+      float s = fract(x) * 8.0;
+      float i = floor(s), f = fract(s);
+      f = f * f * (3.0 - 2.0 * f);
+      return mix(stop(i), stop(mod(i + 1.0, 8.0)), f);
+    }
+    void main(){
+      float mask = texture2D(uMask, vUv).a;
+      if (mask < 0.004) discard;
+
+      vec2 asp = vec2(uAspect, 1.0);
+      vec2 p = vUv * asp;
+      float t = uTime * 0.09;   // vit seul, à vitesse constante
+
+
+      vec2 q = vec2(snoise(p * 0.8 + vec2(t * 0.6, -t * 0.4)), snoise(p * 0.8 + vec2(3.1, 7.4) - t * 0.5));
+      float n = snoise(p * 0.55 + q * 0.75 + vec2(-t * 0.3, t * 0.2));
+
+      // bandes larges et lumineuses, comme des rideaux d'aurore
+      float x = vUv.y * 0.55 + vUv.x * 0.25 + n * 0.32 + t * 0.35;
+      vec3 col = aurora(x);
+      vec3 col2 = aurora(x + 0.18 + q.x * 0.12);
+      col = mix(col, col2, smoothstep(-0.4, 0.6, q.y));
+      // grain fin
+      col += (hash(gl_FragCoord.xy + fract(uTime) * 91.0) - 0.5) * 0.06;
+
+      // remplissage organique par le bas, synchronisé avec la lumière
+      float gate = clamp(0.62 * (1.0 - vUv.y) + 0.38 * (n * 0.5 + 0.5), 0.0, 1.0);
+      float rv = uReveal * 1.3;
+      float a = mask * (1.0 - smoothstep(rv - 0.3, rv, gate)) * uVis;
+      gl_FragColor = vec4(col * a, a);
+    }`,
+});
+const shape = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), shapeMat);
+shape.renderOrder = 0;
+scene.add(shape);
+
+/* ---------- L'anneau de projets ---------- */
+const PAD = 16;
+const cardVS = /* glsl */`
+  uniform vec2 uSize;     // taille (px) de la carte, marge comprise
+  uniform float uR;       // rayon de l'anneau : la carte épouse sa courbure
+  uniform float uVel;     // vitesse angulaire normalisée (inertie)
+  varying vec2 vUv;
+  void main(){
+    vUv = uv;
+    vec3 p = position;
+    float bx = sin(uv.y * 3.14159);
+    p.x += uVel * bx * 0.14;
+    float a = (p.x * uSize.x) / uR;
+    vec3 q = vec3(uR * sin(a) / uSize.x, p.y, uR * (cos(a) - 1.0));
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(q, 1.0);
+  }`;
+const cardFS = /* glsl */`
+  uniform sampler2D uTex;
+  uniform vec2 uCover, uPad, uEnter;
+  uniform float uBlur, uProg, uAlpha, uLoaded, uAsp, uHover, uShow;
+  varying vec2 vUv;
+  ${NOISE}
+  vec3 tap(vec2 uv, float b){ return texture2D(uTex, uv, b).rgb; }
+  void main(){
+    // l'arrière des cartes n'est pas affiché en miroir
+    vec2 fuv = gl_FrontFacing ? vUv : vec2(1.0 - vUv.x, vUv.y);
+    vec2 iuv = (fuv - uPad) / (1.0 - 2.0 * uPad);
+    vec2 uv = (iuv - 0.5) * uCover + 0.5;
+
+    vec3 col;
+    if (uBlur < 0.01) {
+      col = tap(uv, 0.0);
+    } else {
+      float r = uBlur * 0.022, b = uBlur * 2.8;
+      col = tap(uv, b);
+      float wsum = 1.0;
+      for (int i = 0; i < 12; i++) {
+        float fi = float(i) + 0.5;
+        float a = fi * 2.39996;
+        float d = sqrt(fi / 12.0);
+        float w = 1.0 - d * 0.5;
+        col += tap(uv + vec2(cos(a), sin(a) * uAsp) * r * d, b) * w;
+        wsum += w;
+      }
+      col /= wsum;
+    }
+    col = mix(vec3(0.16), col, uLoaded);
+    if (!gl_FrontFacing) col *= 0.82;
+
+    // "Gradient Wipe" : la couleur se propage depuis le point d'entrée du curseur
+    float luma = dot(col, vec3(0.299, 0.587, 0.114));
+    vec2 asp = vec2(uAsp, 1.0);
+    float d = distance(iuv * asp, uEnter * asp) / length(asp);
+    float g = clamp(d * 0.72 + (1.0 - luma) * 0.28 + snoise(iuv * 5.0) * 0.06, 0.0, 1.0);
+    float soft = 0.32;
+    float m = 1.0 - smoothstep(uProg * (1.0 + soft) - soft, uProg * (1.0 + soft), g);
+    vec3 grey = vec3(smoothstep(0.02, 0.98, luma));
+    col = mix(grey, col, m);
+
+    // apparition : le même balayage, du bas vers le haut
+    float gs = clamp((1.0 - iuv.y) * 0.75 + (1.0 - luma) * 0.15 + snoise(iuv * 4.0) * 0.08, 0.0, 1.0);
+    float show = 1.0 - smoothstep(uShow * 1.35 - 0.35, uShow * 1.35, gs);
+
+    vec2 e = min(iuv, 1.0 - iuv);
+    float em = min(e.x * uAsp, e.y);
+    float aa = fwidth(em) * 1.2;
+    float softEdge = uBlur * 0.025;
+    float edge = smoothstep(-softEdge - aa, softEdge, em);
+    float a = edge * uAlpha * show;
+    gl_FragColor = vec4(col * a, a);
+  }`;
+
+const RATIO = { square: [1, 1], portrait: [0.72, 1.28], landscape: [1.5, 0.844] };
+const loader = new THREE.TextureLoader();
+loader.setCrossOrigin("anonymous");
+const geo = new THREE.PlaneGeometry(1, 1, 32, 8);
+const ring = new THREE.Group();
+scene.add(ring);
+const texCache = {};
+
+const cards = [];
+for (let copy = 0; copy < RING_COPIES; copy++) {
+  PROJECTS.forEach((p, i) => {
+    const mat = new THREE.ShaderMaterial({
+      transparent: true, depthTest: false, depthWrite: false, premultipliedAlpha: true,
+      side: THREE.DoubleSide,
+      uniforms: {
+        uTex: { value: null }, uCover: { value: new THREE.Vector2(1, 1) }, uPad: { value: new THREE.Vector2() },
+        uEnter: { value: new THREE.Vector2(0.5, 0.5) }, uSize: { value: new THREE.Vector2(1, 1) },
+        uR: { value: 500 }, uVel: { value: 0 },
+        uBlur: { value: 0 }, uProg: { value: 0 }, uAlpha: { value: 0 }, uLoaded: { value: 0 },
+        uAsp: { value: 1 }, uHover: { value: 0 }, uShow: { value: 0 },
+      },
+      vertexShader: cardVS, fragmentShader: cardFS,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    ring.add(mesh);
+    const c = {
+      mesh, mat, p, i, n: cards.length,
+      phase: Math.random() * Math.PI * 2,
+      hover: 0, prog: 0, dim: 0, appear: 0,
+      imgAsp: RATIO[p.format][0] / RATIO[p.format][1],
+      world: new THREE.Vector3(),
+    };
+    mesh.userData.card = c;
+    cards.push(c);
+  });
+}
+PROJECTS.forEach((p, i) => {
+  loader.load(p.img, tex => {
+    tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    texCache[i] = tex;
+    cards.filter(c => c.i === i).forEach(c => {
+      c.mat.uniforms.uTex.value = tex;
+      c.imgAsp = tex.image.width / tex.image.height;
+      c.loaded = true;
+      sizeCard(c);
+    });
+  });
+});
+
+/* ---------- Mise en page ---------- */
+let W, H, unit, R, shapeW, shapeH;
+const TILT_X = 0.36, TILT_Z = -0.3;   // vu d'au-dessus, penché en diagonale (haut à gauche, bas à droite)
+function sizeCard(c) {
+  const [rw, rh] = RATIO[c.p.format];
+  c.w = unit * rw; c.h = unit * rh;
+  c.fw = c.w + PAD * 2; c.fh = c.h + PAD * 2;
+  const u = c.mat.uniforms;
+  u.uPad.value.set(PAD / c.fw, PAD / c.fh);
+  u.uSize.value.set(c.fw, c.fh);
+  u.uAsp.value = c.w / c.h;
+  u.uR.value = R;
+  const planeAsp = c.w / c.h;
+  if (c.imgAsp > planeAsp) u.uCover.value.set(planeAsp / c.imgAsp, 1);
+  else u.uCover.value.set(1, c.imgAsp / planeAsp);
+}
+function layout() {
+  W = innerWidth; H = innerHeight;
+  renderer.setSize(W, H, false);
+  camera.aspect = W / H;
+  camera.position.z = (H / 2) / Math.tan(THREE.MathUtils.degToRad(FOV / 2));
+  camera.updateProjectionMatrix();
+
+  const mobile = W < 760;
+  R = Math.min(W * (mobile ? 0.44 : 0.34), H * 0.9);
+  unit = Math.min(W, H * 1.7) * (mobile ? 0.19 : 0.112);
+  cards.forEach(sizeCard);
+
+  // répartition sur l'anneau selon la largeur réelle de chaque carte : écarts réguliers
+  const total = cards.reduce((s, c) => s + c.w, 0);
+  const gap = Math.max(10, (Math.PI * 2 * R - total) / cards.length);
+  let acc = 0;
+  cards.forEach(c => { c.offset = (acc + c.w / 2) / R; acc += c.w + gap; });
+
+  // la forme reste à l'intérieur de l'anneau : les cartes ne la traversent jamais
+  const clear = 2 * (R * Math.cos(Math.abs(TILT_Z)) - unit * 0.9);
+  shapeW = Math.max(160, Math.min(W * (mobile ? 0.6 : 0.5), clear, H * 0.62 * VB.w / VB.h));
+  shapeH = shapeW * VB.h / VB.w;
+}
+layout();
+addEventListener("resize", layout);
+
+/* ============ Rotation, scroll, inertie ============ */
+const BASE = 0.12;
+let spin = 0, velocity = 0, speedMul = 1, angVel = 0, bobT = 0;
+let hovered = null, sheetOpen = false, current = 0, labMode = false, sceneVis = 1;
+let sceneTw = { from: 1, to: 1, t0: 0, dur: 1 };
+const easeInOut = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+function sceneTo(to, dur) { sceneTw = { from: sceneVis, to, t0: performance.now(), dur }; }
+
+addEventListener("wheel", e => {
+  if (sheetOpen) return;
+  if (labMode) { if (!zoomed) { labVY += e.deltaY * 2.2; labVX += e.deltaX * 2.2; } return; }
+  if (aboutMode) return;
+  velocity = clamp(velocity + e.deltaY * 0.0022, -6, 6);
+}, { passive: true });
+
+let touchY = null;
+addEventListener("touchstart", e => { touchY = e.touches[0].clientY; }, { passive: true });
+addEventListener("touchmove", e => {
+  if (sheetOpen || touchY === null) return;
+  const y = e.touches[0].clientY;
+  if (!labMode && !aboutMode) velocity = clamp(velocity + (touchY - y) * 0.006, -6, 6);
+  touchY = y;
+}, { passive: true });
+
+/* ============ Curseur, label, survol ============ */
+const cursor = document.getElementById("cursor");
+const blob = cursor.querySelector(".blob");
+const label = document.getElementById("label");
+const lt = label.querySelector(".lt"), ly = label.querySelector(".ly");
+let mx = innerWidth / 2, my = innerHeight / 2, cx = mx, cy = my, lx = mx, lyy = my;
+let stretch = 0, overCanvas = false, pointerIn = false;
+const ndc = new THREE.Vector2(), ray = new THREE.Raycaster();
+
+addEventListener("pointermove", e => {
+  mx = e.clientX; my = e.clientY; pointerIn = true;
+  overCanvas = e.target === canvas;
+});
+document.addEventListener("pointerleave", () => { pointerIn = false; });
+
+function bindLink(el) {
+  el.addEventListener("pointerenter", () => { cursor.classList.add("link"); Sound.tick(); });
+  el.addEventListener("pointerleave", () => cursor.classList.remove("link"));
+}
+document.querySelectorAll("[data-cursor=link]").forEach(bindLink);
+
+function pick(x, y) {
+  ndc.set((x / W) * 2 - 1, -(y / H) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  // seuls les projets à l'avant de l'anneau, face à nous, sont survolables
+  const front = cards.filter(c => c.world.z > R * 0.3 && c.appear > 0.8)
+                     .sort((a, b) => b.world.z - a.world.z);
+  for (const c of front) {
+    const h = ray.intersectObject(c.mesh, false)[0];
+    if (!h) continue;
+    const pu = c.mat.uniforms.uPad.value;
+    const iu = (h.uv.x - pu.x) / (1 - 2 * pu.x), iv = (h.uv.y - pu.y) / (1 - 2 * pu.y);
+    if (iu >= 0 && iu <= 1 && iv >= 0 && iv <= 1) return { c, uv: [iu, iv] };
+  }
+  return null;
+}
+function setHover(hit) {
+  const c = hit ? hit.c : null;
+  if (c === hovered) return;
+  hovered = c;
+  if (c) {
+    c.mat.uniforms.uEnter.value.set(hit.uv[0], hit.uv[1]);
+    cursor.classList.add("view");
+    lt.textContent = c.p.title; ly.textContent = c.p.type;
+    label.classList.add("on");
+    Sound.tick(1.25);
+  } else {
+    cursor.classList.remove("view");
+    label.classList.remove("on");
+  }
+}
+
+canvas.addEventListener("click", e => {
+  if (labMode || aboutMode) return;
+  const hit = pick(e.clientX, e.clientY);
+  if (hit) openSheet(hit.c.i);
+});
+
+/* ============ Boucle ============ */
+let last = performance.now();
+const ringEuler = new THREE.Euler(TILT_X, 0, TILT_Z, "ZXY");
+
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  const k = 1 - Math.pow(0.001, dt);
+  const time = now / 1000;
+
+  // Work <-> Lab : la scène s'efface et recule (animation à durée fixe)
+  const sp = clamp((now - sceneTw.t0) / sceneTw.dur, 0, 1);
+  sceneVis = sceneTw.from + (sceneTw.to - sceneTw.from) * easeInOut(sp);
+  const zoom = 0.62 + 0.38 * easeOut(sceneVis);
+
+  if (!sheetOpen && finePointer && !labMode && !aboutMode && sceneVis > 0.95)
+    setHover(pointerIn && overCanvas ? pick(mx, my) : null);
+  else if (labMode && hovered) setHover(null);
+
+  /* rotation */
+  const stop = hovered || sheetOpen;
+  speedMul = lerp(speedMul, stop ? 0 : 1, (hovered ? 2.2 : 1) * k);
+  velocity *= Math.pow(stop ? 0.00002 : 0.12, dt);
+  angVel = BASE * (reduced ? 0.3 : 1) * speedMul + velocity;
+  spin += angVel * dt;
+  bobT += dt * speedMul;
+
+  /* forme */
+  const su = shapeMat.uniforms;
+  su.uTime.value = time;
+  su.uReveal.value = clamp((now - START - T.shape) / 2600, 0, 1);
+  su.uVis.value = sceneVis;
+  shape.scale.set(shapeW * zoom, shapeH * zoom, 1);
+
+  /* anneau */
+  ring.rotation.copy(ringEuler);
+  ring.scale.setScalar(zoom);
+  ring.updateMatrixWorld();
+  const vel = reduced ? 0 : clamp(-angVel / 4, -1, 1);
+
+  cards.forEach(c => {
+    const phi = c.offset - spin;
+    const tIn = clamp((now - (START + T.cards + c.n * T.cardStep)) / 1200, 0, 1);
+    c.appear = easeOut(tIn);
+
+    // le flottement se fige sur place au survol (pas de retour au centre)
+    const bob = Math.sin(bobT * 0.9 + c.phase) * 8;
+    const m = c.mesh;
+    m.position.set(R * Math.sin(phi), bob - (1 - c.appear) * 120, R * Math.cos(phi));
+    m.rotation.set(0, phi, 0);
+    m.updateMatrixWorld();
+    c.world.setFromMatrixPosition(m.matrixWorld);
+
+    const isH = hovered === c;
+    c.hover = lerp(c.hover, isH ? 1 : 0, 3 * k);
+    c.prog = clamp(c.prog + (isH ? dt / 0.95 : -dt / 0.6), 0, 1);
+
+    // au survol : ni zoom ni flou des voisins, seul le flou de profondeur reste
+    m.scale.set(c.fw * (1 + Math.abs(vel) * 0.12), c.fh, 1);
+    m.renderOrder = isH ? 10000 : c.world.z;
+
+    // profondeur de champ douce : net devant, flou derrière
+    const depth = clamp((R - c.world.z / zoom) / (2 * R), 0, 1);
+    const blur = smoothstep(0.35, 1, depth) * 0.85;
+
+    const u = c.mat.uniforms;
+    u.uVel.value = vel;
+    u.uBlur.value = Math.min(1, blur);
+    u.uProg.value = c.prog;
+    u.uHover.value = c.hover;
+    u.uAlpha.value = Math.min(1, c.appear * 1.6) * sceneVis;
+    u.uShow.value = c.appear;
+    u.uLoaded.value = lerp(u.uLoaded.value, c.loaded ? 1 : 0, 3 * k);
+  });
+
+  renderer.render(scene, camera);
+
+  if (labMode || labLeaving) labStep(dt);
+
+  /* curseur : étirement selon la vitesse */
+  const ck = 1 - Math.pow(0.000002, dt);
+  cx = lerp(cx, mx, ck); cy = lerp(cy, my, ck);
+  const dx = mx - cx, dy = my - cy;
+  const dist = Math.hypot(dx, dy);
+  const view = cursor.classList.contains("view");
+  stretch = lerp(stretch, Math.min(dist / 70, view ? 0.18 : 0.75), 1 - Math.pow(0.00001, dt));
+  const ang = Math.atan2(dy, dx);
+  cursor.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
+  blob.style.transform = `rotate(${ang}rad) scale(${1 + stretch}, ${1 - stretch * 0.4})`;
+
+  lx = lerp(lx, mx, 1 - Math.pow(0.0004, dt)); lyy = lerp(lyy, my, 1 - Math.pow(0.0004, dt));
+  const flip = lx > W - 260;
+  label.style.transform = `translate3d(${flip ? lx - 54 : lx + 54}px, ${lyy + 20}px, 0) translateX(${flip ? "-100%" : "0"})`;
+
+  requestAnimationFrame(frame);
+}
+
+/* ============ Lab : galerie en colonnes, scroll infini ============ */
+const lab = document.getElementById("lab");
+const labCols = document.getElementById("labCols");
+const navWork = document.getElementById("navWork");
+const navLab = document.getElementById("navLab");
+let labBuilt = false, labLeaving = false, cols = [], tileW = 1, labTimers = [];
+let labX = 0, labY = 0, labVX = 0, labVY = 0, dragging = false;
+const wrap = (v, m) => ((v % m) + m) % m;
+
+// grille "tuile" : n colonnes répétées deux fois en largeur, chaque colonne répétée trois fois en hauteur,
+// ce qui permet de la déplacer à l'infini dans toutes les directions
+function buildLab() {
+  const mobile = innerWidth < 760;
+  const colw = mobile ? 120 : clamp(innerWidth * 0.12, 130, 210);
+  const gap = mobile ? 28 : clamp(innerWidth * 0.07, 56, 130);
+  lab.style.setProperty("--colw", colw + "px");
+  lab.style.setProperty("--lgap", gap + "px");
+  const step = colw + gap;
+  const n = Math.max(4, Math.ceil(innerWidth / step) + 1);
+  tileW = n * step;
+  labCols.innerHTML = "";
+  cols = [];
+  for (let ci = 0; ci < n * 2; ci++) {
+    const d = ci % n;
+    const col = document.createElement("div");
+    col.className = "lab-col";
+    const items = LAB.filter((_, i) => i % n === d);
+    const set = () => `<div class="lab-set">${items.map(it =>
+      `<figure class="lab-fig" data-cursor="link" data-type="${it.type}" data-lg="${it.lg}" data-audio="${it.audio ? 1 : 0}" style="--d:${Math.round(Math.random() * 1100)};--e:${Math.round(Math.random() * 550)}"><div class="lab-card" style="aspect-ratio:${it.ratio}">${
+        it.type === "video"
+          ? `<video src="${it.src}" poster="${it.poster}" muted loop playsinline preload="none" draggable="false"></video>`
+          : `<img src="${it.src}" alt="${it.title}" decoding="async" draggable="false">`}</div></figure>`).join("")}</div>`;
+    col.innerHTML = set() + set() + set();
+    labCols.appendChild(col);
+    cols.push({ el: col, h: 0, phase: ((d * 0.37) % 1) });
+  }
+  labCols.querySelectorAll(".lab-fig").forEach(bindLink);
+  labBuilt = true;
+  measureLab();
+  watchLabVideos();
+}
+
+// les vidéos du Lab ne tournent que lorsqu'elles sont à l'écran (et seulement dans le Lab)
+const labVideoIO = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    const v = e.target;
+    if (e.isIntersecting && labMode) { v.preload = "auto"; v.play().catch(() => {}); }
+    else v.pause();
+  });
+}, { rootMargin: "100px" });
+function watchLabVideos() {
+  labCols.querySelectorAll("video").forEach(v => { labVideoIO.unobserve(v); labVideoIO.observe(v); });
+}
+// positions de chaque carte mémorisées une fois : on calcule ensuite leur place à l'écran sans relire le DOM
+let labCards = [];
+function measureLab() {
+  cols.forEach(c => { c.h = c.el.firstElementChild.offsetHeight; c.left = c.el.offsetLeft; });
+  labCards = [];
+  cols.forEach(c => c.el.querySelectorAll(".lab-card").forEach(el => {
+    const fig = el.parentElement;
+    labCards.push({ el, col: c, top: fig.offsetTop, w: el.offsetWidth, h: el.offsetHeight, l: 0, on: false });
+  }));
+}
+addEventListener("resize", () => { if (labBuilt) { buildLab(); if (labMode) lab.classList.add("show"); } });
+
+const ZONE = 300;   // rayon d'influence du curseur (px)
+
+// la grille est immobile : elle ne bouge qu'au scroll ou au glisser, avec un peu d'inertie
+function labStep(dt) {
+  if (zoomed) { labVX = 0; labVY = 0; }
+  if (!dragging) {
+    labVX *= Math.pow(0.02, dt); labVY *= Math.pow(0.02, dt);
+    labX += labVX * dt; labY += labVY * dt;
+  }
+  const ox = -wrap(labX, tileW);
+  labCols.style.transform = `translate3d(${ox}px, 0, 0)`;
+  cols.forEach(c => {
+    if (!c.h) return;
+    c.y = -wrap(labY + c.phase * c.h, c.h);
+    c.el.style.transform = `translate3d(0, ${c.y}px, 0)`;
+  });
+
+  // enfoncement : toute la grille recule autour du point saisi, puis rebondit au relâché
+  const pressing = !!dragStart;
+  press = lerp(press, pressing ? 1 : 0, 1 - Math.pow(pressing ? 0.0008 : 0.004, dt));
+  labPress.style.transformOrigin = `${pressX}px ${pressY}px`;
+  labPress.style.transform = press > 0.001 ? `scale(${1 - press * 0.045})` : "";
+
+  // champ autour du curseur : les cartes se soulèvent, d'autant plus qu'elles sont proches
+  const active = labMode && !zoomed && pointerIn && !pressing;
+  const kl = 1 - Math.pow(0.0005, dt);
+  for (const card of labCards) {
+    const x0 = ox + card.col.left, y0 = card.top + (card.col.y || 0);
+    let f = 0;
+    if (active && x0 < W + ZONE && x0 + card.w > -ZONE && y0 < H + ZONE && y0 + card.h > -ZONE) {
+      // distance du curseur au bord le plus proche de la carte (0 si le curseur est dessus)
+      const dx = Math.max(x0 - mx, 0, mx - (x0 + card.w));
+      const dy = Math.max(y0 - my, 0, my - (y0 + card.h));
+      const d = Math.hypot(dx, dy);
+      f = d >= ZONE ? 0 : Math.pow(1 - d / ZONE, 1.4);
+    }
+    card.l = lerp(card.l, f, kl);
+    if (card.l > 0.002) {
+      card.el.style.transform = `translate3d(0, ${(-card.l * 22).toFixed(2)}px, 0) scale(${(1 + card.l * 0.085).toFixed(4)})`;
+      card.on = true;
+    } else if (card.on) {
+      card.el.style.transform = "";
+      card.on = false;
+    }
+  }
+}
+
+/* glisser pour déplacer la grille (souris et doigt) */
+let dragStart = null, press = 0, pressX = 0, pressY = 0;
+const labPress = document.getElementById("labPress");
+lab.addEventListener("pointerdown", e => {
+  if (!labMode || zoomed || e.button > 0) return;
+  e.preventDefault();   // pas de sélection ni de glisser natif des images
+  dragStart = { x: e.clientX, y: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), moved: 0 };
+  pressX = e.clientX; pressY = e.clientY;
+  dragging = true; labVX = 0; labVY = 0;
+  cursor.classList.add("press");
+});
+lab.addEventListener("dragstart", e => e.preventDefault());
+addEventListener("pointermove", e => {
+  if (!dragStart) return;
+  const now = performance.now();
+  const dx = e.clientX - dragStart.lx, dy = e.clientY - dragStart.ly;
+  const dtm = Math.max(1, now - dragStart.t) / 1000;
+  labX -= dx; labY -= dy;
+  labVX = lerp(labVX, -dx / dtm, 0.35); labVY = lerp(labVY, -dy / dtm, 0.35);
+  dragStart.lx = e.clientX; dragStart.ly = e.clientY; dragStart.t = now;
+  dragStart.moved += Math.abs(dx) + Math.abs(dy);
+  if (dragStart.moved > 6) lab.classList.add("dragging");
+});
+addEventListener("pointerup", () => {
+  if (!dragStart) return;
+  if (performance.now() - dragStart.t > 80) { labVX = 0; labVY = 0; }   // relâché à l'arrêt : pas d'élan
+  dragStart = null; dragging = false;
+  cursor.classList.remove("press");
+  setTimeout(() => lab.classList.remove("dragging"), 0);
+});
+
+/* ---------- Image agrandie (FLIP depuis la grille) ---------- */
+const zoom = document.getElementById("zoom");
+const zoomClose = document.getElementById("zoomClose");
+const zoomSound = document.getElementById("zoomSound");
+let zoomed = null;
+const ZOOM_EASE = "cubic-bezier(.76,0,.24,1)";
+function fitRect(ratio) {
+  const maxW = W * (W < 760 ? 0.88 : 0.66), maxH = H * 0.76;
+  let w = maxW, h = w / ratio;
+  if (h > maxH) { h = maxH; w = h * ratio; }
+  return { x: (W - w) / 2, y: (H - h) / 2, w, h };
+}
+const flip = (r, t) => `translate(${r.left}px, ${r.top}px) scale(${r.width / t.w}, ${r.height / t.h})`;
+function openZoom(fig) {
+  if (zoomed) return;
+  const r = fig.querySelector(".lab-card").getBoundingClientRect();
+  const isVideo = fig.dataset.type === "video";
+  const small = fig.querySelector("img, video");
+  const t = fitRect(r.width / r.height);
+  let img;
+  if (isVideo) {
+    // vidéo : on repart de l'image affichée, puis la version grande prend le relais
+    img = document.createElement("video");
+    Object.assign(img, { muted: true, loop: true, playsInline: true, autoplay: true, poster: small.poster });
+    img.setAttribute("muted", ""); img.setAttribute("playsinline", "");
+    img.src = fig.dataset.lg;
+    img.currentTime = small.currentTime || 0;
+    img.play().catch(() => {});
+  } else {
+    img = new Image();
+    img.alt = ""; img.src = small.currentSrc || small.src;
+  }
+  img.className = "zoom-img";
+  img.style.width = t.w + "px"; img.style.height = t.h + "px";
+  img.style.transform = flip(r, t);
+  zoom.appendChild(img);
+  fig.classList.add("lifted");
+  zoom.classList.add("on");
+  zoom.setAttribute("aria-hidden", "false");
+  requestAnimationFrame(() => zoom.classList.add("open"));
+  zoomClose.style.left = (t.x + t.w - 22) + "px";
+  zoomClose.style.top = (t.y - 22) + "px";
+  // vidéo avec bande-son : bouton pour activer le son, en bas à gauche de l'image
+  const withAudio = isVideo && fig.dataset.audio === "1";
+  zoom.classList.toggle("has-audio", withAudio);
+  zoomSound.classList.remove("on");
+  zoomSound.querySelector(".t").textContent = "Activer le son";
+  zoomSound.style.left = (t.x + 14) + "px";
+  zoomSound.style.top = (t.y + t.h - 14 - 36) + "px";
+  img.animate([{ transform: flip(r, t) }, { transform: `translate(${t.x}px, ${t.y}px)` }],
+    { duration: 900, easing: ZOOM_EASE, fill: "forwards" }).finished.then(() => { if (zoomed && zoomed.img === img) zoom.classList.add("ready"); });
+  // image : version haute définition une fois chargée
+  if (!isVideo && fig.dataset.lg) {
+    const hi = fig.dataset.lg;
+    const pre = new Image(); pre.src = hi;
+    pre.decode().then(() => { if (zoomed && zoomed.img === img) img.src = hi; }).catch(() => {});
+  }
+  zoomed = { fig, img, t };
+  cursor.classList.remove("link");
+  Sound.open();
+}
+function closeZoom() {
+  if (!zoomed) return;
+  const { fig, img, t } = zoomed;
+  zoomed = null;
+  const r = fig.querySelector(".lab-card").getBoundingClientRect();
+  zoom.classList.remove("open", "ready");
+  if (img.tagName === "VIDEO") img.muted = true;   // la vidéo redevient muette dès qu'on la quitte
+  zoomSound.classList.remove("on");
+  zoom.setAttribute("aria-hidden", "true");
+  cursor.classList.remove("link");
+  img.animate([{ transform: `translate(${t.x}px, ${t.y}px)` }, { transform: flip(r, t) }],
+    { duration: 800, easing: ZOOM_EASE, fill: "forwards" }).finished.then(() => {
+    fig.classList.remove("lifted");
+    if (img.pause) img.pause();
+    img.remove();
+    if (!zoomed) zoom.classList.remove("on");
+  });
+  Sound.close();
+}
+labCols.addEventListener("click", e => {
+  const f = e.target.closest(".lab-fig");
+  if (f && labMode) openZoom(f);
+});
+document.getElementById("zoomVeil").addEventListener("click", closeZoom);
+zoomClose.addEventListener("click", closeZoom);
+zoomSound.addEventListener("click", () => {
+  if (!zoomed || zoomed.img.tagName !== "VIDEO") return;
+  const v = zoomed.img;
+  v.muted = !v.muted;
+  if (!v.muted) v.play().catch(() => {});
+  zoomSound.classList.toggle("on", !v.muted);
+  zoomSound.querySelector(".t").textContent = v.muted ? "Activer le son" : "Son activé";
+  Sound.click();
+});
+
+/* ============ Sections : Work / Lab / About ============
+   Work = la scène 3D. Lab et About : la scène recule et s'efface, un dégradé monte par le bas,
+   puis le contenu apparaît. Chaque sortie se termine avant que la section suivante n'arrive. */
+const later = (fn, ms) => labTimers.push(setTimeout(fn, ms));
+const about = document.getElementById("about");
+const navAbout = document.getElementById("navAbout");
+let aboutMode = false;
+about.querySelectorAll(".ab").forEach((el, i) => {
+  el.style.setProperty("--i", i);
+  el.style.setProperty("--e", Math.round(Math.random() * 350));
+});
+
+function enterLabContent(bgAt, showAt) {
+  labMode = true; labLeaving = false;
+  if (!labBuilt) buildLab();
+  lab.classList.remove("leaving");
+  lab.classList.add("on");
+  lab.setAttribute("aria-hidden", "false");
+  later(() => body.classList.add("lab-mode"), bgAt);
+  later(() => { measureLab(); lab.classList.add("show"); watchLabVideos(); }, showAt);
+}
+// sortie du Lab : l'ambre remonte par le bas par-dessus la lavande (même geste qu'à l'entrée),
+// puis la lavande est retirée sans animation, cachée dessous
+const amberEl = document.querySelector(".light.amber"), lavEl = document.querySelector(".light.lav");
+function bgBackToAmber() {
+  amberEl.style.transition = "none";
+  amberEl.style.zIndex = "1";
+  amberEl.style.setProperty("--p", "0%");
+  void amberEl.offsetWidth;
+  amberEl.style.transition = "--p 1.9s cubic-bezier(.5,0,.15,1)";
+  amberEl.style.setProperty("--p", "135%");
+  setTimeout(() => {
+    if (!labMode) {
+      lavEl.style.transition = "none";
+      body.classList.remove("lab-mode");
+      void lavEl.offsetWidth;
+      lavEl.style.transition = "";
+    }
+    amberEl.style.transition = "none";
+    amberEl.style.zIndex = "";
+    amberEl.style.removeProperty("--p");
+    void amberEl.offsetWidth;
+    amberEl.style.transition = "";
+  }, 2000);
+}
+function leaveLabContent() {
+  closeZoom();
+  labMode = false; labLeaving = true;
+  cursor.classList.remove("link");
+  // les images s'effacent au hasard, puis la lavande redescend
+  lab.classList.add("leaving");
+  lab.classList.remove("show");
+  lab.setAttribute("aria-hidden", "true");
+  later(bgBackToAmber, 950);
+  later(() => { lab.classList.remove("on", "leaving"); labLeaving = false; labCols.querySelectorAll("video").forEach(v => v.pause()); }, 1150);
+}
+function enterAboutContent(bgAt, showAt) {
+  aboutMode = true;
+  about.classList.remove("leaving");
+  about.classList.add("on");
+  about.scrollTop = 0;
+  about.setAttribute("aria-hidden", "false");
+  later(() => about.classList.add("show"), showAt);
+}
+function leaveAboutContent() {
+  aboutMode = false;
+  cursor.classList.remove("link");
+  about.classList.add("leaving");
+  about.classList.remove("show");
+  about.setAttribute("aria-hidden", "true");
+  later(() => about.classList.remove("on", "leaving"), 900);
+}
+
+const currentMode = () => labMode ? "Lab" : aboutMode ? "About" : "Work";
+function switchMode(next) {
+  const prev = currentMode();
+  if (next === prev || sheetOpen) return;
+  labTimers.forEach(clearTimeout); labTimers = [];
+  [navWork, navLab, navAbout].forEach(b => b.classList.toggle("active", b.id === "nav" + next));
+  Sound.swell(next !== "Work");
+  if (prev === "Lab") leaveLabContent();
+  if (prev === "About") leaveAboutContent();
+  const out = prev === "Lab" ? 950 : prev === "About" ? 650 : 0;   // durée de la sortie
+  if (next === "Work") { later(() => sceneTo(1, 1800), out + 300); return; }
+  if (prev === "Work") sceneTo(0, 1500);
+  const showAt = prev === "Work" ? 900 : out + 350;
+  if (next === "Lab") enterLabContent(out, showAt);
+  else enterAboutContent(out, showAt);
+}
+navWork.addEventListener("click", () => switchMode("Work"));
+navLab.addEventListener("click", () => switchMode("Lab"));
+navAbout.addEventListener("click", () => switchMode("About"));
+
+requestAnimationFrame(frame);
+
+/* ============ Apparition "gradient wipe" des images DOM ============ */
+function wipeImage(box, src, ox = "50%", oy = "100%", alt = "") {
+  box.classList.add("shimmer");
+  const w = document.createElement("div");
+  w.className = "wipe";
+  w.style.setProperty("--ox", ox); w.style.setProperty("--oy", oy);
+  // l'image (ou la vidéo) arrive directement en couleur, révélée par un front doux
+  let c, ready;
+  if (src && src.video) {
+    c = document.createElement("video");
+    Object.assign(c, { muted: true, loop: true, playsInline: true, autoplay: true, preload: "auto", poster: src.poster || "" });
+    c.setAttribute("muted", ""); c.setAttribute("playsinline", "");
+    c.src = src.video;
+    w.classList.add("is-video");
+    ready = new Promise(r => {
+      if (c.readyState >= 2) return r();
+      c.addEventListener("loadeddata", r, { once: true });
+      c.addEventListener("error", r, { once: true });
+      setTimeout(r, 4000);
+    }).then(() => c.play().catch(() => {}));
+  } else {
+    c = new Image();
+    c.alt = alt; c.src = src && src.src ? src.src : src;
+    ready = c.decode ? c.decode().catch(() => {}) : Promise.resolve();
+  }
+  w.append(c);
+  box.appendChild(w);
+  return ready.then(() => new Promise(res => {
+    box.classList.remove("shimmer");
+    requestAnimationFrame(() => requestAnimationFrame(() => w.classList.add("go")));
+    setTimeout(() => { w.classList.add("done"); res(w); }, 1950);
+  }));
+}
+
+/* ============ Fiche projet ============ */
+const sheet = document.getElementById("sheet");
+const backdrop = document.getElementById("backdrop");
+const media = document.getElementById("sheetMedia");
+const info = document.getElementById("sheetInfo");
+const sheetBody = document.getElementById("sheetBody");
+const gallery = document.getElementById("gallery");
+const pad2 = n => String(n).padStart(2, "0");
+
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    const f = e.target;
+    io.unobserve(f);
+    const ox = Math.round(Math.random() * 100) + "%";
+    setTimeout(() => wipeImage(f, f.dataset.src, ox, "100%", f.dataset.alt), Number(f.dataset.i) * 90);
+  });
+}, { root: sheetBody, threshold: 0.2 });
+
+// galerie : paysages par 2, portraits par 3 (ou 2 + 2 s'il y en a 4), chaque image garde son ratio
+function fillGallery(p) {
+  const g = p.gallery || [];
+  sheet.classList.toggle("no-gallery", !g.length);
+  // toutes les images d'une même famille gardent la même taille ; une rangée incomplète est centrée
+  // l'ordre des images est respecté : on remplit les rangées dans l'ordre, une nouvelle rangée commence
+  // quand le format change (paysage/carré par 2, portrait par 3)
+  const rows = [];
+  for (const it of g) {
+    const per = it.w >= it.h ? 2 : 3;
+    const last = rows[rows.length - 1];
+    if (last && last.per === per && last.items.length < per) last.items.push(it);
+    else rows.push({ items: [it], per });
+  }
+  const fig = (it, i) => `<figure data-src="${it.src}" data-alt="${p.title}" data-i="${i % 3}" style="aspect-ratio:${it.w} / ${it.h}"></figure>`;
+  gallery.innerHTML = rows.map(r =>
+    `<div class="row" style="grid-template-columns:repeat(${r.items.length}, calc((100% - ${r.per - 1} * 12px) / ${r.per}))">${r.items.map(fig).join("")}</div>`).join("");
+  gallery.querySelectorAll("figure").forEach(f => io.observe(f));
+}
+function fill(i) {
+  const p = PROJECTS[i];
+  document.getElementById("sheetIndex").textContent = `${pad2(i + 1)} / ${pad2(PROJECTS.length)}`;
+  document.getElementById("sheetTitle").textContent = p.title;
+  const sub = document.getElementById("sheetSub");
+  sub.textContent = p.type || ""; sub.hidden = !p.type;
+  const desc = document.getElementById("sheetDesc");
+  desc.innerHTML = paragraphs(p.text); desc.hidden = !p.text;
+  const sec = document.getElementById("sheetSection");
+  document.getElementById("sheetH2").textContent = p.title2 || "";
+  document.getElementById("sheetText").innerHTML = paragraphs(p.text2);
+  sec.hidden = !p.title2 && !p.text2;
+  sheet.classList.toggle("no-more", sec.hidden && !(p.gallery || []).length);
+}
+// texte brut -> paragraphes ; "Libellé : suite" met le libellé en gras
+const esc = s => s.replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
+function paragraphs(text) {
+  if (!text) return "";
+  return text.trim().split(/\n\s*\n/).map(par => {
+    const t = esc(par.trim()).replace(/\n/g, "<br>");
+    const m = t.match(/^([^:.<]{3,40}):\s+(.+)$/s);
+    return m ? `<p><strong>${m[1]}:</strong> ${m[2]}</p>` : `<p>${t}</p>`;
+  }).join("");
+}
+
+/* vidéo principale de la fiche : lecture auto en muet, bouton pour le son */
+const soundOn = document.getElementById("videoSound");
+function heroVideo() { return media.querySelector(".wipe:last-of-type video"); }
+function syncVideoSound() {
+  const v = heroVideo();
+  soundOn.classList.toggle("on", !!v && !v.muted);
+  soundOn.querySelector(".t").textContent = v && !v.muted ? "Son activé" : "Activer le son";
+}
+soundOn.addEventListener("click", () => {
+  const v = heroVideo();
+  if (!v) return;
+  v.muted = !v.muted;
+  if (!v.muted) v.play();
+  syncVideoSound();
+  Sound.click();
+});
+function setImage(i, dir) {
+  const p = PROJECTS[i];
+  const olds = [...media.querySelectorAll(".wipe")];
+  olds.forEach(o => { const v = o.querySelector("video"); if (v) v.pause(); });
+  const ox = dir > 0 ? "100%" : dir < 0 ? "0%" : "50%";
+  const oy = dir ? "50%" : "100%";
+  if (!dir) olds.forEach(o => o.remove());
+  const item = p.video ? { video: p.video.src, poster: p.video.poster } : { src: p.img };
+  wipeImage(media, item, ox, oy, p.title).then(() => {
+    if (dir) olds.forEach(o => o.remove());
+  });
+  syncVideoSound();
+}
+
+function openSheet(i) {
+  current = i;
+  fill(i); setImage(i, 0); fillGallery(PROJECTS[i]);
+  sheetBody.scrollTop = 0;
+  sheetOpen = true;
+  setHover(null);
+  body.classList.add("sheet-open");
+  sheet.setAttribute("aria-hidden", "false");
+  sheet.focus({ preventScroll: true });
+  Sound.open();
+}
+function closeSheet() {
+  if (!sheetOpen) return;
+  sheetOpen = false;
+  media.querySelectorAll("video").forEach(v => v.pause());
+  body.classList.remove("sheet-open");
+  sheet.setAttribute("aria-hidden", "true");
+  Sound.close();
+}
+let busy = false;
+async function go(dir) {
+  if (!sheetOpen || busy) return;
+  busy = true;
+  Sound.click();
+  const n = PROJECTS.length;
+  current = (current + dir + n) % n;
+  sheetBody.scrollTo({ top: 0, behavior: "smooth" });
+  setImage(current, dir);
+  gallery.classList.add("swap");
+  const items = [...info.children, document.getElementById("sheetSection")];
+  await Promise.all(items.map((el, j) => el.animate(
+    [{ opacity: 1, transform: "translateX(0)" }, { opacity: 0, transform: `translateX(${-dir * 24}px)` }],
+    { duration: 320, delay: j * 40, easing: "cubic-bezier(.7,0,.84,0)", fill: "forwards" }).finished));
+  fill(current);
+  fillGallery(PROJECTS[current]);
+  gallery.classList.remove("swap");
+  items.forEach((el, j) => el.animate(
+    [{ opacity: 0, transform: `translateX(${dir * 24}px)` }, { opacity: 1, transform: "translateX(0)" }],
+    { duration: 700, delay: j * 60, easing: "cubic-bezier(.16,1,.3,1)", fill: "forwards" }));
+  setTimeout(() => { busy = false; }, 450);
+}
+document.getElementById("close").addEventListener("click", closeSheet);
+document.getElementById("prev").addEventListener("click", () => go(-1));
+document.getElementById("next").addEventListener("click", () => go(1));
+backdrop.addEventListener("click", closeSheet);
+addEventListener("keydown", e => {
+  if (zoomed && e.key === "Escape") { closeZoom(); return; }
+  if ((labMode || aboutMode) && e.key === "Escape") { switchMode("Work"); return; }
+  if (!sheetOpen) return;
+  if (e.key === "Escape") closeSheet();
+  if (e.key === "ArrowRight") go(1);
+  if (e.key === "ArrowLeft") go(-1);
+});
+
+/* accès clavier aux projets */
+const srList = document.getElementById("srList");
+PROJECTS.forEach((p, i) => {
+  const li = document.createElement("li");
+  const b = document.createElement("button");
+  b.textContent = p.type ? `${p.title}, ${p.type}` : p.title;
+  b.addEventListener("click", () => openSheet(i));
+  li.appendChild(b); srList.appendChild(li);
+});
+</script>
+</body>
+</html>
